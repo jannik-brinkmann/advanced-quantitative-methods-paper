@@ -1,0 +1,180 @@
+---
+title: "Dassonneville Replication"
+author: "Jannik Brinkmann, Carolin Holtermann"
+date: "10 4 2020"
+output: html_document
+---
+
+```{r setup}
+# Set working directory to the source of the R-Script.
+# Note: Works only for RStudio as IDE.
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+
+# Suppress warnings
+options(warn = -1)
+
+# Import missing packages to R environment
+p_needed <- c("foreign",
+              "haven",
+              "dplyr",
+              "xtable")
+packages <- rownames(installed.packages())
+p_to_install <- p_needed[!(p_needed %in% packages)]
+if (length(p_to_install) > 0) {
+  install.packages(p_to_install)
+}
+sapply(p_needed, require, character.only = TRUE)
+
+# Delete variables from R environment
+rm(list = ls())
+
+# Load the data sets
+cses <- read_dta("data/CSES_gender_knowledge_ajpsreplication.dta")
+ees <- read_dta("data/EES_gender_knowledge_ajpsreplication.dta")
+filtered_cses <- na.omit(select(cses, female, age, college, lsq, democ, gdp_growth, Z_Qcontent, womencontent, Qstructure, svy_mode, women_parliament_survey, women_parliament_18_21, polknowledge))
+filtered_ees <- na.omit(select(ees, female, age, edu, lsq_prev, gdp_growth, svy_mode, women_parliament_survey, women_parliament_18_21, polknowledge))
+```
+
+## CSES: Featurewise Replication of Descriptive Statistics of the Independent Variables
+```{r}
+# Female
+cses_female_mean <- mean(filtered_cses$female)
+cses_female_sd <- sd(filtered_cses$female)
+
+# Age
+cses_age_mean <- mean(filtered_cses$age)
+cses_age_sd <- sd(filtered_cses$age)
+
+# College Degree
+cses_college_mean <- mean(filtered_cses$college)
+cses_college_sd <- sd(filtered_cses$college)
+
+# Disproportionality
+cses_lsq_mean <- mean(filtered_cses$lsq)
+cses_lsq_sd <- sd(filtered_cses$lsq)
+
+# Polity IV democracy
+cses_democ_mean <- mean(filtered_cses$democ)
+cses_democ_sd <- sd(filtered_cses$democ)
+
+# GDP growth
+cses_gdp_growth_mean <- mean(filtered_cses$gdp_growth)
+cses_gdp_growth_sd <- sd(filtered_cses$gdp_growth)
+
+# Question on int. politics
+filtered_cses$Z_Qcontent_international <- ifelse(filtered_cses$Z_Qcontent == 3, 1, 0)
+cses_Z_Qcontent_international_mean <- mean(filtered_cses$Z_Qcontent_international)
+cses_Z_Qcontent_international_sd <- sd(filtered_cses$Z_Qcontent_international)
+
+# Question on female politician
+filtered_cses$womencontent_binary <- ifelse(filtered_cses$womencontent >= 1, 1, 0)
+cses_womencontent_binary_mean <- mean(filtered_cses$womencontent_binary)
+cses_womencontent_binary_sd <- sd(filtered_cses$womencontent_binary)
+
+
+# Multiple-choice format
+filtered_cses$multiple_choice <- ifelse(filtered_cses$Qstructure == 2, 1, 0)
+cses_multiple_choice_mean <- mean(filtered_cses$multiple_choice)
+cses_multiple_choice_sd <- sd(filtered_cses$multiple_choice)
+
+# Open-ended questions
+filtered_cses$open_ended <- ifelse(filtered_cses$Qstructure == 3, 1, 0)
+cses_open_ended_mean <- mean(filtered_cses$open_ended)
+cses_open_ended_sd <- sd(filtered_cses$open_ended)
+
+# Mix of question formats
+filtered_cses$mixed_format <- ifelse(filtered_cses$Qstructure == 4, 1, 0)
+cses_mixed_format_mean <- mean(filtered_cses$mixed_format)
+cses_mixed_format_sd <- sd(filtered_cses$mixed_format)
+
+# Telephone survey
+filtered_cses$telephone_survey <- ifelse(filtered_cses$svy_mode == 1, 1, 0)
+cses_telephone_survey_mean <- mean(filtered_cses$telephone_survey)
+cses_telephone_survey_sd <- sd(filtered_cses$telephone_survey)
+
+# Self-administered
+filtered_cses$self_administered <- ifelse(filtered_cses$svy_mode == 2, 1, 0)
+cses_self_administered_mean <- mean(filtered_cses$self_administered)
+cses_self_administered_sd <- sd(filtered_cses$self_administered)
+
+# Mix of modes
+filtered_cses$mixed_modes <- ifelse(filtered_cses$svy_mode == 3, 1, 0)
+cses_mixed_modes_mean <- mean(filtered_cses$mixed_modes)
+cses_mixed_modes_sd <- sd(filtered_cses$mixed_modes)
+
+# Percent of women in parliament at time of survey
+cses_women_parliament_survey_mean <- mean(filtered_cses$women_parliament_survey)
+cses_women_parliament_survey_sd <- sd(filtered_cses$women_parliament_survey)
+
+# Percent of women in parliament formative years
+cses_women_parliament_18_21_mean <- mean(filtered_cses$women_parliament_18_21)
+cses_women_parliament_18_21_sd <- sd(filtered_cses$women_parliament_18_21)
+
+# Summarize descriptive statistics in a latex table
+cses_descriptive_statistics <- data.frame(matrix(c(cses_female_mean, cses_female_sd,
+                                                   cses_age_mean, cses_age_sd,
+                                                   cses_college_mean, cses_college_sd,
+                                                   cses_lsq_mean, cses_lsq_sd,
+                                                   cses_democ_mean, cses_democ_sd,
+                                                   cses_gdp_growth_mean, cses_gdp_growth_sd,
+                                                   cses_Z_Qcontent_international_mean, cses_Z_Qcontent_international_sd,
+                                                   cses_womencontent_binary_mean, cses_womencontent_binary_sd,
+                                                   cses_multiple_choice_mean, cses_multiple_choice_sd,
+                                                   cses_open_ended_mean, cses_open_ended_sd,
+                                                   cses_mixed_format_mean, cses_mixed_format_sd,
+                                                   cses_telephone_survey_mean, cses_telephone_survey_sd,
+                                                   cses_self_administered_mean, cses_self_administered_sd,
+                                                   cses_mixed_modes_mean, cses_mixed_modes_sd,
+                                                   cses_women_parliament_survey_mean, cses_women_parliament_survey_sd,
+                                                   cses_women_parliament_18_21_mean, cses_women_parliament_18_21_sd), 
+                                                 ncol = 2))
+xtable(cses_descriptive_statistics)
+
+```
+
+## EES: Featurewise Replication of Descriptive Statistics of the Independent Variables
+```{r}
+# Female
+ees_female_mean <- mean(filtered_ees$female) 
+ees_female_sd <- sd(filtered_ees$female) 
+
+# Age
+ees_age_mean <- mean(filtered_ees$age) 
+ees_age_sd <- sd(filtered_ees$age) 
+
+# Education
+ees_edu_mean <- mean(filtered_ees$edu) 
+ees_edu_sd <- sd(filtered_ees$edu) 
+
+# Disproportionality
+ees_lsq_prev_mean <- mean(filtered_ees$lsq_prev) 
+ees_lsq_prev_sd <- sd(filtered_ees$lsq_prev) 
+
+# GDP growth
+ees_gdp_growth_mean <- mean(filtered_ees$gdp_growth) 
+ees_gdp_growth_sd <- sd(filtered_ees$gdp_growth) 
+
+# Combination FtF and telephone survey
+ees_svy_mode_mean <- mean(filtered_ees$svy_mode) 
+ees_svy_mode_sd <- sd(filtered_ees$svy_mode) 
+
+# Percent of women in parliament at time of survey
+ees_women_parliament_survey_mean <- mean(filtered_ees$women_parliament_survey) 
+ees_women_parliament_survey_sd <- sd(filtered_ees$women_parliament_survey) 
+
+# Percent of women in parliament formative years
+ees_women_parliament_18_21_mean <- mean(filtered_ees$women_parliament_18_21) 
+ees_women_parliament_18_21_sd <- sd(filtered_ees$women_parliament_18_21) 
+
+# Summarize descriptive statistics in a latex table
+ees_descriptive_statistics <- data.frame(matrix(c(ees_female_mean, ees_female_sd,
+                                                  ees_age_mean, ees_age_sd,
+                                                  ees_edu_mean, ees_edu_sd,
+                                                  ees_lsq_prev_mean, ees_lsq_prev_sd,
+                                                  ees_gdp_growth_mean, ees_gdp_growth_sd,
+                                                  ees_svy_mode_mean, ees_svy_mode_sd,
+                                                  ees_women_parliament_survey_mean, ees_women_parliament_survey_sd,
+                                                  ees_women_parliament_18_21_mean, ees_women_parliament_18_21_sd), 
+                                                 ncol = 2))
+xtable(ees_descriptive_statistics)
+```
